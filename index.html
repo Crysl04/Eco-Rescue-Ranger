@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Eco Rescue Ranger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- Level Menu Overlay -->
+  <div id="overlay" class="overlay">
+    <div class="panel">
+      <h1>Eco Rescue Ranger</h1>
+      <p class="sub">Choose an area to restore. Clean trash, plant trees, reduce Carbon, and meet the goals.</p>
+
+      <div class="levels">
+        <button class="levelBtn" id="continueBtn">▶ Continue</button>
+        <button class="levelBtn" data-level="park" data-idx="0">🌳 Level 1: Polluted Park</button>
+        <button class="levelBtn" data-level="river" data-idx="1">💧 Level 2: Polluted Riverbank</button>
+        <button class="levelBtn" data-level="coast" data-idx="2">🌊 Level 3: Coastal Cleanup</button>
+        <button class="levelBtn" data-level="forest" data-idx="3">🌲 Level 4: Deforested Edge</button>
+</div>
+
+      <div class="tips">
+        <div><b>Controls:</b> Click lock mouse • WASD move • Click trash • T plant • E interact • M music</div>
+        <div><b>Tip:</b> Pick up trash, then deposit to the Recycling Bin (E).</div>
+        <div><b>Progress:</b> Levels unlock as you complete them (saved in your browser).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UI HUD -->
+  <div id="ui">
+    <div class="row">
+      <div id="levelName" class="pill">Level: —</div>
+      <div class="pill">Trash: <span id="trashDone">0</span>/<span id="trashGoal">0</span></div>
+      <div class="pill">Trees: <span id="treesDone">0</span>/<span id="treesGoal">0</span></div>
+      <div class="pill">Trash remaining: <span id="trashRemaining">0</span></div>
+      <div class="pill">Inventory: <span id="invTrashTotal">0</span></div>
+      <div class="pill">Saplings: <span id="invSaplings">0</span></div>
+      <div id="carbon" class="pill">Carbon: <span id="carbonValue">100</span>%</div>
+      <div id="carbonBarOuter" aria-hidden="true"><div id="carbonBarInner"></div></div>
+      <div id="points" class="pill">Eco Points: <span id="pointsValue">0</span></div>
+    </div>
+
+    <div id="badges">
+      <div class="badge locked" id="badge-ecohero">🏅 Eco Hero</div>
+      <div class="badge locked" id="badge-trees">🌳 Tree Guardian</div>
+      <div class="badge locked" id="badge-wildlife">🐦 Wildlife Restored</div>
+    </div>
+
+    <div id="toast" class="hidden"></div>
+    <div id="prompt" class="hidden"></div>
+    <div id="crosshair" aria-hidden="true"></div>
+    <div id="hint">WASD move • Click trash • T plant • E interact • M music • ESC unlock mouse</div>
+  </div>
+
+  <!-- Completion Overlay -->
+  <div id="complete" class="overlay hidden">
+    <div class="panel">
+      <h1>✅ Area Restored!</h1>
+      <p class="sub" id="completeStats">Nice work, Ranger.</p>
+      <div class="levels">
+        <button id="nextLevelBtn" class="levelBtn">Next Level ▶</button>
+        <button id="backMenuBtn" class="levelBtn secondary">Back to Level Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Overlay -->
+  <div id="end" class="overlay hidden">
+    <div class="panel">
+      <h1>🎉 Mission Complete!</h1>
+      <p class="sub">You restored every area. Thanks for helping the planet.</p>
+      <div class="levels">
+        <button id="restartBtn" class="levelBtn">Restart Progress</button>
+        <button id="backMenuBtn2" class="levelBtn secondary">Back to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <a-scene id="aframeScene" embedded vr-mode-ui="enabled:false" style="display:none"></a-scene>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
