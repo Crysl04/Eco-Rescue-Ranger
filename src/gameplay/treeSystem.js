@@ -5,11 +5,29 @@ import { useSapling } from '../systems/inventory.js';
 import { playPlant } from '../systems/audioSystem.js'; 
 
 let group = null;
+let trunkMaterial = null;
+let leafMaterial = null;
 let cost = 10;
 let plantingEnabled = true;
 
 export function initTrees(app, player, state) {
   const raycaster = new THREE.Raycaster();
+  
+  // Load trunk texture once
+  if (!trunkMaterial) {
+    const textureLoader = new THREE.TextureLoader();
+    const trunkTex = textureLoader.load('/assets/textures/trunk.jpg');
+    trunkTex.colorSpace = THREE.SRGBColorSpace;
+    trunkMaterial = new THREE.MeshStandardMaterial({ map: trunkTex });
+  }
+  
+  // Load leaf texture once
+  if (!leafMaterial) {
+    const textureLoader = new THREE.TextureLoader();
+    const leafTex = textureLoader.load('/assets/textures/leaves.png');
+    leafTex.colorSpace = THREE.SRGBColorSpace;
+    leafMaterial = new THREE.MeshStandardMaterial({ map: leafTex });
+  }
 
   function plant() {
     if (!plantingEnabled) return;
@@ -25,11 +43,11 @@ export function initTrees(app, player, state) {
     // Instant tree mesh
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.12, 0.14, 1.2, 10),
-      new THREE.MeshStandardMaterial({ color: 0x6d4c2f })
+      trunkMaterial
     );
     const crown = new THREE.Mesh(
       new THREE.ConeGeometry(0.75, 1.5, 12),
-      new THREE.MeshStandardMaterial({ color: 0x1f7a1f })
+      leafMaterial
     );
     const tree = new THREE.Group();
     trunk.position.set(0, 0.6, 0);

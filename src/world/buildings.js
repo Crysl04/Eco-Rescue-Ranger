@@ -1,6 +1,9 @@
 
 import * as THREE from 'three';
 
+const bldgTexture = new THREE.TextureLoader().load('/assets/textures/bld.jpg');
+bldgTexture.colorSpace = THREE.SRGBColorSpace;
+
 export function createBuildings(scene, count=15, zones=null) {
   const group = new THREE.Group();
   group.name = 'buildings';
@@ -13,7 +16,11 @@ export function createBuildings(scene, count=15, zones=null) {
     const d = 3 + Math.random()*4;
     const b = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshStandardMaterial({ color: 0x9a9a9a })
+      new THREE.MeshStandardMaterial({
+        map: bldgTexture,
+        roughness: 0.8,
+        metalness: 0.0
+      })
     );
 
     let x, z;

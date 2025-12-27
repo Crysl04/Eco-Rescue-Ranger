@@ -112,8 +112,12 @@ function buildParkDetails() {
   g.add(path);
 
   // Decorative trees
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x6d4c2f });
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x1f7a1f });
+  const trunkTex = loader.load('/assets/textures/trunk.jpg');
+  trunkTex.colorSpace = THREE.SRGBColorSpace;
+  const trunkMat = new THREE.MeshStandardMaterial({ map: trunkTex });
+  const leafTex = loader.load('/assets/textures/leaves.png');
+  leafTex.colorSpace = THREE.SRGBColorSpace;
+  const leafMat = new THREE.MeshStandardMaterial({ map: leafTex });
   for (let i=0;i<18;i++) {
     const a = (i/18) * Math.PI*2;
     const x = Math.cos(a)*40;

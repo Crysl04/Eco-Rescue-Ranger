@@ -1,5 +1,7 @@
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { getMapGroup } from './aframeMaps.js';
 
 export function clearProps(scene) {
   const g = scene.getObjectByName('props');
@@ -112,6 +114,81 @@ export function createProps(scene, levelId) {
   if (levelId === 'rooftop') {
     for (let i=0;i<10;i++) addVent(group, -16 + i*3.5, -10 + (i%2)*5);
   }
+
+  // Randomly place 10 cut logs models across the scene
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.load('/assets/models/cutted-woods.glb', (gltf) => {
+    const raycaster = new THREE.Raycaster();
+    const terrain = scene.getObjectByName('aframeTerrainMesh');
+    for (let i = 0; i < 10; i++) {
+      const obj = gltf.scene.clone(true);
+      const x = -110 + Math.random() * 220;
+      const z = -110 + Math.random() * 220;
+
+      let y = 0.0;
+      if (terrain) {
+        raycaster.set(new THREE.Vector3(x, 25, z), new THREE.Vector3(0, -1, 0));
+        const hits = raycaster.intersectObject(terrain, true);
+        if (hits.length) y = hits[0].point.y;
+      }
+      obj.position.set(x, y, z);
+      obj.rotation.y = Math.random() * Math.PI * 2;
+      const s = 0.08 + Math.random() * 0.08; // much smaller
+      obj.scale.set(s, s, s);
+      group.add(obj);
+    }
+  }, undefined, (err) => {
+    console.error('Failed to load cutted-woods.glb:', err);
+  });
+
+  // Place a house model in a clear area, aligned to terrain height
+  gltfLoader.load('/assets/models/house.glb', (gltf) => {
+    const obj = gltf.scene;
+    const terrain = scene.getObjectByName('aframeTerrainMesh');
+    const raycaster = new THREE.Raycaster();
+
+    // Place houses far from building zones to avoid overlap
+    const target = new THREE.Vector3(105, 25, -95);
+    let y = 0;
+    if (terrain) {
+      raycaster.set(target, new THREE.Vector3(0, -1, 0));
+      const hits = raycaster.intersectObject(terrain, true);
+      if (hits.length) y = hits[0].point.y;
+    }
+
+    // Normalize house height to match typical building height (~8 units)
+    const bbox = new THREE.Box3().setFromObject(obj);
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+    const targetHeight = 8; // buildings range 4-10, use mid-upper
+    const scaleFactor = size.y > 0 ? targetHeight / size.y : 1.6;
+
+    // First house
+    obj.position.set(target.x, y, target.z);
+    const lookAngle1 = Math.atan2(-target.x, -target.z);
+    obj.rotation.y = lookAngle1;
+    obj.scale.setScalar(scaleFactor);
+    group.add(obj);
+
+    // Second house placed elsewhere
+    const obj2 = obj.clone(true);
+    const target2 = new THREE.Vector3(-105, 25, 95);
+    let y2 = 0;
+    if (terrain) {
+      raycaster.set(target2, new THREE.Vector3(0, -1, 0));
+      const hits2 = raycaster.intersectObject(terrain, true);
+      if (hits2.length) y2 = hits2[0].point.y;
+    }
+    obj2.position.set(target2.x, y2, target2.z);
+    const lookAngle2 = Math.atan2(-target2.x, -target2.z);
+    obj2.rotation.y = lookAngle2;
+    obj2.scale.setScalar(scaleFactor);
+    group.add(obj2);
+  }, undefined, (err) => {
+    console.error('Failed to load house.glb:', err);
+  });
+
+  // Place a shed (FBX) in another clear spot, aligned to terrain height
 
   return group;
 }

@@ -1,5 +1,24 @@
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+const gltfLoader = new GLTFLoader();
+let binTemplate = null;
+let preloadPromise = null;
+
+export function preloadInteractableModels() {
+  if (preloadPromise) return preloadPromise;
+  preloadPromise = new Promise((resolve, reject) => {
+    gltfLoader.load('/assets/models/trashbin.glb', (gltf) => {
+      binTemplate = gltf.scene;
+      resolve();
+    }, undefined, (err) => {
+      console.error('Failed to preload trashbin.glb:', err);
+      reject(err);
+    });
+  });
+  return preloadPromise;
+}
 
 let group = null;
 let interactables = [];
@@ -68,16 +87,36 @@ export function createInteractables(scene, layout) {
   scene.add(group);
   interactables = [];
 
-  // Trash Can
-  const bin = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.7, 0.7, 1.2, 12),
-    new THREE.MeshStandardMaterial({ color: 0x2ecc71 })
-  );
-  bin.position.set(layout.bin[0], 0.6, layout.bin[2]);
-  bin.userData = { kind: 'bin', prompt: 'Trash Can: deposit trash (E)' };
-  group.add(bin);
+  // Trash Can: only use GLTF, no cylinder fallback
+  if (binTemplate) {
+    const obj = binTemplate.clone(true);
+    obj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+    obj.scale.setScalar(0.9);
+    const bbox = new THREE.Box3().setFromObject(obj);
+    const size = new THREE.Vector3(); bbox.getSize(size);
+    const y = size.y > 0 ? size.y/2 : 0.6;
+    obj.position.set(layout.bin[0], y, layout.bin[2]);
+    obj.userData = { kind: 'bin', prompt: 'Trash Can: deposit trash (E)' };
+    group.add(obj);
+    interactables.push(obj);
+  } else {
+    // Preload then add when ready
+    preloadInteractableModels().then(() => {
+      if (!group || !binTemplate) return;
+      const obj = binTemplate.clone(true);
+      obj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+      obj.scale.setScalar(0.9);
+      const bbox = new THREE.Box3().setFromObject(obj);
+      const size = new THREE.Vector3(); bbox.getSize(size);
+      const y = size.y > 0 ? size.y/2 : 0.6;
+      obj.position.set(layout.bin[0], y, layout.bin[2]);
+      obj.userData = { kind: 'bin', prompt: 'Trash Can: deposit trash (E)' };
+      group.add(obj);
+      interactables.push(obj);
+    }).catch(() => {});
+  }
+
   addBillboard(layout.bin, 'Trash Can');
-  interactables.push(bin);
 
   // Sapling Station
   const sap = new THREE.Mesh(

@@ -1,6 +1,9 @@
 
 import * as THREE from 'three';
 
+const accentTexture = new THREE.TextureLoader().load('/assets/textures/grass.jpg');
+accentTexture.colorSpace = THREE.SRGBColorSpace;
+
 export function applyTerrain(scene, terrainCfg) {
   const ground = scene.getObjectByName('ground');
   if (!ground) return;
@@ -19,7 +22,11 @@ export function applyTerrain(scene, terrainCfg) {
   for (let i=0;i<12;i++) {
     const g = new THREE.Mesh(
       new THREE.CircleGeometry(3 + Math.random()*6, 18),
-      new THREE.MeshStandardMaterial({ color: terrainCfg.accent ?? 0x2f7a2f })
+      new THREE.MeshStandardMaterial({
+        map: accentTexture,
+        roughness: 1.0,
+        metalness: 0.0
+      })
     );
     g.rotation.x = -Math.PI/2;
     g.position.set((Math.random()-0.5)*160, 0.03, (Math.random()-0.5)*160);

@@ -23,7 +23,16 @@ export function initTrash(app, player, state, ui, getStage, getLevelId) {
     const ttype = randomTrashType();
     const mesh = makeTrashMesh(ttype);
     mesh.userData.ttype = ttype;
-    mesh.position.set((Math.random()-0.5)*150, 0.16, (Math.random()-0.5)*150);
+    const x = (Math.random()-0.5)*150;
+    const z = (Math.random()-0.5)*150;
+    let y = 0.16;
+    const terrain = app.scene.getObjectByName('aframeTerrainMesh');
+    if (terrain) {
+      raycaster.set(new THREE.Vector3(x, 25, z), new THREE.Vector3(0, -1, 0));
+      const hits = raycaster.intersectObject(terrain, true);
+      if (hits.length) y = hits[0].point.y + 0.02;
+    }
+    mesh.position.set(x, y, z);
     mesh.rotation.y = Math.random() * Math.PI * 2;
     return mesh;
   }

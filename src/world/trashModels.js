@@ -1,34 +1,57 @@
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+const loader = new GLTFLoader();
+const templates = [];
+
+// Preload multiple bottle trash models
+const MODEL_PATHS = [
+  '/assets/models/growthbottle (1).glb',
+  '/assets/models/milk_bottle.glb',
+  '/assets/models/perfume_bottle.glb',
+  '/assets/models/water_bottle_free.glb',
+  '/assets/models/water_bottles.glb'
+];
+
+MODEL_PATHS.forEach((p) => {
+  loader.load(p, (gltf) => {
+    templates.push(gltf.scene);
+  }, undefined, (err) => {
+    console.error('Failed to load trash model', p, err);
+  });
+});
 
 export function makeTrashMesh(ttype) {
-  let geom;
-
-  if (ttype.shape === 'bottle') {
-    // simple bottle: cylinder body + small neck
-    const body = new THREE.CylinderGeometry(0.11, 0.12, 0.32, 12);
-    const neck = new THREE.CylinderGeometry(0.06, 0.08, 0.12, 10);
-    const g = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({ color: ttype.color });
-    const m1 = new THREE.Mesh(body, mat);
-    const m2 = new THREE.Mesh(neck, mat);
-    m2.position.y = 0.22;
-    g.add(m1); g.add(m2);
-    g.userData.isTrash = true;
-    return g;
+  // If any GLTF is loaded, pick one at random
+  if (templates.length > 0) {
+    const base = templates[Math.floor(Math.random() * templates.length)];
+    const obj = base.clone(true);
+    obj.userData.isTrash = true;
+    obj.userData.ttype = ttype;
+    obj.traverse((n) => {
+      if (n.isMesh) {
+        n.castShadow = true;
+        n.receiveShadow = true;
+        n.userData.ttype = ttype;
+      }
+    });
+    // Normalize height to ~0.32 with slight variation
+    const bbox = new THREE.Box3().setFromObject(obj);
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+    const targetHeight = 0.32 * (0.92 + Math.random() * 0.16);
+    const scaleFactor = size.y > 0 ? targetHeight / size.y : 0.3;
+    obj.scale.setScalar(scaleFactor);
+    return obj;
   }
 
-  if (ttype.shape === 'can') {
-    geom = new THREE.CylinderGeometry(0.12, 0.12, 0.26, 14);
-    const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: ttype.color }));
-    mesh.userData.isTrash = true;
-    return mesh;
-  }
-
-  // wrapper (flat plane folded)
-  const plane = new THREE.PlaneGeometry(0.34, 0.22, 1, 1);
-  const mesh = new THREE.Mesh(plane, new THREE.MeshStandardMaterial({ color: ttype.color, side: THREE.DoubleSide }));
-  mesh.rotation.x = -Math.PI/2;
+  // Fallback primitive if models not yet loaded
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 0.26, 14),
+    new THREE.MeshStandardMaterial({ color: ttype.color })
+  );
   mesh.userData.isTrash = true;
+  mesh.userData.ttype = ttype;
   return mesh;
 }

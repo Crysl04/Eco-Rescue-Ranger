@@ -32,7 +32,7 @@ import { getLevelConfig, LEVEL_ORDER } from './systems/levels.js';
 import { unlockUpTo } from './systems/progress.js';
 import { saveCheckpoint, clearCheckpoint } from './systems/checkpoint.js';
 
-import { createInteractables, clearInteractables } from './systems/interactables.js';
+import { createInteractables, clearInteractables, preloadInteractableModels } from './systems/interactables.js';
 import { resetInventory, addSaplings, updateHUD } from './systems/inventory.js';
 
 import { resetCarbon, resetPoints, getCarbon, getPoints, carbonCreep } from './systems/carbonMeter.js';
@@ -44,6 +44,9 @@ const player = initPlayer(app);
 createSkybox(app.scene);
 attachHands(app.camera);
 initAudio();
+
+// Preload interactable models early to avoid fallback flashes
+preloadInteractableModels();
 
 // Initialize audio controls in UI
 setTimeout(() => {
