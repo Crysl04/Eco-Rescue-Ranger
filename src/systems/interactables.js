@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 // Manual scale overrides for GLTF models (adjust if models appear too large/small)
 const MODEL_SCALES = {
   trashbin: 0.9,
-  sapling: null  // auto-compute to 1.2 height
+  sapling: null    // auto-compute to 1.2 height
 };
 
 const gltfLoader = new GLTFLoader();
@@ -161,7 +161,7 @@ export function createInteractables(scene, layout) {
     interactables.push(sap);
   }
 
-  // Citizen: use procedural model
+  // Citizen: always use procedural model (GLB removed)
   const npc = makeCitizen();
   npc.position.set(layout.npc[0], 0.0, layout.npc[2]);
 
