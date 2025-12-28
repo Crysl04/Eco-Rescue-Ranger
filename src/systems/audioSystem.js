@@ -7,7 +7,7 @@ let sfxVolume = 0.6; // Sound effects volume
 export function initAudio() {
   // Sound effects
   pickupAudio = new Audio('/assets/audio/pickup.wav');
-  plantAudio = new Audio('/assets/audio/plant.wav');
+  plantAudio = new Audio('/assets/audio/pickup.wav');
   completeAudio = new Audio('/assets/audio/complete.wav');
   
   // Background music
