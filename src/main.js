@@ -29,7 +29,7 @@ import { createProps } from './world/props.js';
 
 import { initLevelUI, resetRunForLevel, getNextLevelId } from './systems/levelManager.js';
 import { getLevelConfig, LEVEL_ORDER } from './systems/levels.js';
-import { unlockUpTo } from './systems/progress.js';
+import { unlockUpTo, markCompleted, loadProgress } from './systems/progress.js';
 import { saveCheckpoint, clearCheckpoint } from './systems/checkpoint.js';
 
 import { createInteractables, clearInteractables, preloadInteractableModels } from './systems/interactables.js';
@@ -73,6 +73,16 @@ const ui = initLevelUI((levelId) => {
   completedOnce = false;
 });
 
+// ESC key to show menu overlay
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('overlay');
+    if (overlay && overlay.style.display !== 'flex') {
+      overlay.style.display = 'flex';
+    }
+  }
+});
+
 
 const trashSystem = initTrash(app, player, state, ui, () => stage, () => currentLevelId);
 const treeSystem = initTrees(app, player, state);
@@ -83,17 +93,29 @@ function buildWorldForLevel(cfg) {
   state.wildlifeShown = false;
   state.trashRemaining = 0;
 
-  // Reset run values
+  // Reset run values (always start fresh on load/restart)
+  completedOnce = false;
   resetPoints();
-  resetCarbon(cfg.startCarbon);
+  const progress = loadProgress();
+  const alreadyCompleted = !!progress.completed?.[cfg.id];
+  resetCarbon(alreadyCompleted ? 0 : cfg.startCarbon);
 
   resetInventory();
-  addSaplings(1);
+  addSaplings(3);
   updateHUD();
 
   // HUD goals
   goals = cfg.goals ?? { trashCleaned: 0, treesPlanted: 0 };
   ui.setGoals(goals);
+
+  // If level already completed this session, show it finished (carbon 0, goals met) but keep unlock state only in-session
+  if (alreadyCompleted) {
+    state.trashCleaned = goals.trashCleaned ?? 0;
+    state.treesPlanted = goals.treesPlanted ?? 0;
+    state.trashRemaining = 0;
+    ui.setProgress({ trashCleaned: state.trashCleaned, treesPlanted: state.treesPlanted });
+    completedOnce = true;
+  }
   
   // FIX: Update level name in UI
   const levelNameEl = document.getElementById('levelName');
@@ -118,9 +140,11 @@ function buildWorldForLevel(cfg) {
   clearInteractables(app.scene);
   createInteractables(app.scene, layout);
 
-  // Trash spawn rules (faster in later levels)
-  const respawn = true;
-  trashSystem.spawn(cfg.trashCount, respawn);
+  // Trash spawn rules (faster in later levels); skip spawning if already completed this session
+  if (!alreadyCompleted) {
+    const respawn = true;
+    trashSystem.spawn(cfg.trashCount, respawn);
+  }
 
   // Trees: disable on coast
   treeSystem.reset();
@@ -149,6 +173,7 @@ function checkCompletion() {
 
     const idx = LEVEL_ORDER.indexOf(currentLevelId);
     unlockUpTo(Math.min(LEVEL_ORDER.length-1, idx + 1));
+    markCompleted(currentLevelId);
 
     const nextId = getNextLevelId(currentLevelId);
     

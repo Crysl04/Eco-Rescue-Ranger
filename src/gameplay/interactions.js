@@ -67,13 +67,7 @@ export function initInteractions(app, player, state) {
     }
 
     if (kind === 'sapling') {
-      if (!inventory.depositedOnce) {
-        showPrompt('Saplings locked: deposit trash first (use Trash Can).');
-        temporaryPromptUntil = performance.now() + 1200;
-        setTimeout(updatePrompt, 1200);
-        return;
-      }
-      addSaplings(2);
+      addSaplings(3);
     }
 
     if (kind === 'npc') {

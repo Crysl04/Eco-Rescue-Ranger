@@ -7,7 +7,7 @@ import { playPlant } from '../systems/audioSystem.js';
 let group = null;
 let trunkMaterial = null;
 let leafMaterial = null;
-let cost = 10;
+let cost = 5;
 let plantingEnabled = true;
 
 export function initTrees(app, player, state) {

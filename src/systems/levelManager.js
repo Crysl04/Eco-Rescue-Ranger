@@ -1,4 +1,5 @@
 import { LEVEL_ORDER, getLevelConfig } from './levels.js';
+import { loadProgress } from './progress.js';
 
 let onLoadLevel = null;
 let current = 'park';
@@ -19,8 +20,30 @@ function highlightLevel(levelId) {
   });
 }
 
+function updateLevelButtons() {
+  const progress = loadProgress();
+  document.querySelectorAll('.levelBtn[data-idx]').forEach(btn => {
+    const idx = parseInt(btn.dataset.idx);
+    const baseLabel = btn.dataset.label || btn.textContent;
+    btn.dataset.label = baseLabel;
+    const isCompleted = !!progress.completed?.[btn.dataset.level];
+    btn.classList.toggle('completed', isCompleted);
+    btn.textContent = isCompleted ? `${baseLabel} ✅ Completed` : baseLabel;
+    if (idx > progress.unlockedIdx) {
+      btn.disabled = true;
+      btn.title = 'Complete previous levels to unlock';
+    } else {
+      btn.disabled = false;
+      btn.title = '';
+    }
+  });
+}
+
 export function initLevelUI(loadLevelCb) {
   onLoadLevel = loadLevelCb;
+
+  // Load progress and update button states
+  updateLevelButtons();
 
   // Continue loads saved checkpoint (handled in main) – just hide overlay
   const continueBtn = document.getElementById('continueBtn');
@@ -35,6 +58,7 @@ export function initLevelUI(loadLevelCb) {
   // Hook level buttons
   document.querySelectorAll('.levelBtn[data-level]').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.disabled) return; // Prevent clicking locked levels
       const levelId = btn.dataset.level;
       current = levelId;
       highlightLevel(levelId);
@@ -86,6 +110,9 @@ export function initLevelUI(loadLevelCb) {
       const nextLevelBtn = document.getElementById('nextLevelBtn');
       const backMenuBtn = document.getElementById('backMenuBtn');
       
+      // Update level buttons to reflect newly unlocked levels
+      updateLevelButtons();
+      
       if (completeStats) completeStats.textContent = text;
       if (completeOverlay) completeOverlay.classList.remove('hidden');
       
@@ -104,6 +131,7 @@ export function initLevelUI(loadLevelCb) {
           nextLevelBtn.textContent = 'Back to Menu';
           nextLevelBtn.onclick = () => {
             if (completeOverlay) completeOverlay.classList.add('hidden');
+            updateLevelButtons();
             showOverlay();
           };
         }
@@ -112,6 +140,7 @@ export function initLevelUI(loadLevelCb) {
       if (backMenuBtn) {
         backMenuBtn.onclick = () => {
           if (completeOverlay) completeOverlay.classList.add('hidden');
+          updateLevelButtons();
           showOverlay();
         };
       }

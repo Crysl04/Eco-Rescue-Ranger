@@ -5,7 +5,7 @@ export const LAYOUTS = {
     bin: [6, 0.1, 6],
     sapling: [-6, 0.1, 6],
     npc: [-10, 0.1, 0],
-    buildingZones: [[-40,-20, -40,-20], [20,40, 20,40]]
+    buildingZones: [[-90,-60, -45,-15], [60,90, -45,-15]]
   },
   river: {
     spawn: [0, 1.6, 18],
@@ -27,7 +27,7 @@ export const LAYOUTS = {
     bin: [8, 0.1, 10],
     sapling: [-8, 0.1, 10],
     npc: [-14, 0.1, 0],
-    buildingZones: [[-55,-35, 30,55]]
+    buildingZones: [[-90,-60, 30,55]]
   },
   rooftop: {
     spawn: [0, 1.6, 10],

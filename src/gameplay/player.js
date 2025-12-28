@@ -30,7 +30,12 @@ export function initPlayer(app) {
     if (!document.pointerLockElement) document.body.requestPointerLock();
   });
 
-  document.addEventListener("keydown", (e) => (keys[e.key.toLowerCase()] = true));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      document.exitPointerLock();
+    }
+    keys[e.key.toLowerCase()] = true;
+  });
   document.addEventListener("keyup", (e) => (keys[e.key.toLowerCase()] = false));
 
   document.addEventListener("mousemove", (e) => {
