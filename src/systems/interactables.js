@@ -2,20 +2,34 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
+// Manual scale overrides for GLTF models (adjust if models appear too large/small)
+const MODEL_SCALES = {
+  trashbin: 0.9,
+  sapling: null  // auto-compute to 1.2 height
+};
+
 const gltfLoader = new GLTFLoader();
 let binTemplate = null;
+let saplingTemplate = null;
 let preloadPromise = null;
 
 export function preloadInteractableModels() {
   if (preloadPromise) return preloadPromise;
-  preloadPromise = new Promise((resolve, reject) => {
-    gltfLoader.load('/assets/models/trashbin.glb', (gltf) => {
-      binTemplate = gltf.scene;
-      resolve();
-    }, undefined, (err) => {
+  const load = (path) => new Promise((resolve, reject) => {
+    gltfLoader.load(path, (gltf) => resolve(gltf.scene), undefined, reject);
+  });
+  preloadPromise = Promise.all([
+    load('/assets/models/trashbin.glb').catch((err) => {
       console.error('Failed to preload trashbin.glb:', err);
-      reject(err);
-    });
+      return null;
+    }),
+    load('/assets/models/sapling.glb').catch((err) => {
+      console.error('Failed to preload sapling.glb:', err);
+      return null;
+    })
+  ]).then(([bin, sapling]) => {
+    binTemplate = bin;
+    saplingTemplate = sapling;
   });
   return preloadPromise;
 }
@@ -91,7 +105,7 @@ export function createInteractables(scene, layout) {
   if (binTemplate) {
     const obj = binTemplate.clone(true);
     obj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-    obj.scale.setScalar(0.9);
+    obj.scale.setScalar(MODEL_SCALES.trashbin);
     const bbox = new THREE.Box3().setFromObject(obj);
     const size = new THREE.Vector3(); bbox.getSize(size);
     const y = size.y > 0 ? size.y/2 : 0.6;
@@ -105,7 +119,7 @@ export function createInteractables(scene, layout) {
       if (!group || !binTemplate) return;
       const obj = binTemplate.clone(true);
       obj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-      obj.scale.setScalar(0.9);
+      obj.scale.setScalar(MODEL_SCALES.trashbin);
       const bbox = new THREE.Box3().setFromObject(obj);
       const size = new THREE.Vector3(); bbox.getSize(size);
       const y = size.y > 0 ? size.y/2 : 0.6;
@@ -118,20 +132,39 @@ export function createInteractables(scene, layout) {
 
   addBillboard(layout.bin, 'Trash Can');
 
-  // Sapling Station
-  const sap = new THREE.Mesh(
-    new THREE.BoxGeometry(1.4, 1.0, 1.4),
-    new THREE.MeshStandardMaterial({ color: 0x8e5b3a })
-  );
-  sap.position.set(layout.sapling[0], 0.5, layout.sapling[2]);
-  sap.userData = { kind: 'sapling', prompt: 'Sapling Station: get saplings (E)' };
-  group.add(sap);
-  addBillboard(layout.sapling, 'Sapling Station');
-  interactables.push(sap);
+  // Sapling Station: replace box with sapling.glb if available
+  if (saplingTemplate) {
+    const sapObj = saplingTemplate.clone(true);
+    sapObj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+    // Compute a reasonable scale so the sapling is station-sized
+    const bbox = new THREE.Box3().setFromObject(sapObj);
+    const size = new THREE.Vector3(); bbox.getSize(size);
+    const targetHeight = 1.2; // around waist-height display
+    const scaleFactor = MODEL_SCALES.sapling || (size.y > 0 ? targetHeight / size.y : 1.0);
+    sapObj.scale.setScalar(scaleFactor);
+    const y = (size.y * scaleFactor) > 0 ? (size.y * scaleFactor)/2 : 0.6;
+    sapObj.position.set(layout.sapling[0], y, layout.sapling[2]);
+    sapObj.userData = { kind: 'sapling', prompt: 'Sapling Station: get saplings (E)' };
+    group.add(sapObj);
+    addBillboard(layout.sapling, 'Sapling Station');
+    interactables.push(sapObj);
+  } else {
+    // Fallback simple box if model not yet loaded
+    const sap = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 1.0, 1.4),
+      new THREE.MeshStandardMaterial({ color: 0x8e5b3a })
+    );
+    sap.position.set(layout.sapling[0], 0.5, layout.sapling[2]);
+    sap.userData = { kind: 'sapling', prompt: 'Sapling Station: get saplings (E)' };
+    group.add(sap);
+    addBillboard(layout.sapling, 'Sapling Station');
+    interactables.push(sap);
+  }
 
-  // Citizen (more person-like)
+  // Citizen: use procedural model
   const npc = makeCitizen();
   npc.position.set(layout.npc[0], 0.0, layout.npc[2]);
+
   npc.userData = {
     kind: 'npc',
     prompt: 'Citizen: info (E)',

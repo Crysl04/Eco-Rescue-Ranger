@@ -146,9 +146,12 @@ export function createProps(scene, levelId) {
     const obj = gltf.scene;
     const terrain = scene.getObjectByName('aframeTerrainMesh');
     const raycaster = new THREE.Raycaster();
+    // Try to get the active camera to orient houses toward the player
+    let cameraRef = null;
+    scene.traverse((o) => { if (!cameraRef && o.isCamera) cameraRef = o; });
 
-    // Place houses far from building zones to avoid overlap
-    const target = new THREE.Vector3(105, 25, -95);
+    // Place houses outside tree ring (radius ~40) to avoid overlap
+    const target = new THREE.Vector3(-70, 25, 60);
     let y = 0;
     if (terrain) {
       raycaster.set(target, new THREE.Vector3(0, -1, 0));
@@ -165,14 +168,21 @@ export function createProps(scene, levelId) {
 
     // First house
     obj.position.set(target.x, y, target.z);
-    const lookAngle1 = Math.atan2(-target.x, -target.z);
-    obj.rotation.y = lookAngle1;
+    // Yaw the house to face the player horizontally
+    if (cameraRef) {
+      const lookPos = new THREE.Vector3(cameraRef.position.x, obj.position.y, cameraRef.position.z);
+      obj.lookAt(lookPos);
+    } else {
+      const lookAngle1 = Math.atan2(-target.x, -target.z);
+      obj.rotation.y = lookAngle1;
+    }
     obj.scale.setScalar(scaleFactor);
+    obj.userData.type = 'house';
     group.add(obj);
 
-    // Second house placed elsewhere
+    // Second house placed on opposite side
     const obj2 = obj.clone(true);
-    const target2 = new THREE.Vector3(-105, 25, 95);
+    const target2 = new THREE.Vector3(70, 25, 60);
     let y2 = 0;
     if (terrain) {
       raycaster.set(target2, new THREE.Vector3(0, -1, 0));
@@ -180,9 +190,15 @@ export function createProps(scene, levelId) {
       if (hits2.length) y2 = hits2[0].point.y;
     }
     obj2.position.set(target2.x, y2, target2.z);
-    const lookAngle2 = Math.atan2(-target2.x, -target2.z);
-    obj2.rotation.y = lookAngle2;
+    if (cameraRef) {
+      const lookPos2 = new THREE.Vector3(cameraRef.position.x, obj2.position.y, cameraRef.position.z);
+      obj2.lookAt(lookPos2);
+    } else {
+      const lookAngle2 = Math.atan2(-target2.x, -target2.z);
+      obj2.rotation.y = lookAngle2;
+    }
     obj2.scale.setScalar(scaleFactor);
+    obj2.userData.type = 'house';
     group.add(obj2);
   }, undefined, (err) => {
     console.error('Failed to load house.glb:', err);
