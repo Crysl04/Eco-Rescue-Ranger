@@ -8,7 +8,7 @@ export function initAudio() {
   // Sound effects
   pickupAudio = new Audio('/assets/audio/pickup.wav');
   plantAudio = new Audio('/assets/audio/pickup.wav');
-  completeAudio = new Audio('/assets/audio/complete.wav');
+  completeAudio = new Audio('/assets/audio/game-level-complete.wav');
   
   // Background music
   backgroundMusic = new Audio('/assets/audio/ambient.wav');
