@@ -198,3 +198,8 @@ The HUD appears automatically when gameplay starts.
 ```bash
 npm install
 npm run dev
+
+### Team Members
+Chryscelle Grace Campos - Game Developer/Team Leader
+Franz Daniel Arreo - Game Developer
+Jemarie Fernandez - Game Developer
